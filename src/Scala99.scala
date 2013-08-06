@@ -15,4 +15,25 @@ object P02 {
     case _             => throw new NoSuchElementException
   }
 }
+
+object P03 {
+  // my implementation
+  def nth[A](n: Int, l: List[A]): A = {
+    if (n == 0) l.head
+    else if (n > 0 && n < l.length) nth(n - 1, l.tail)
+    else throw new NoSuchElementException
+  }
+  
+  // Trivial with builtins.
+  def nthBuiltin[A](n: Int, ls: List[A]): A =
+    if (n >= 0) ls(n)
+    else throw new NoSuchElementException
+
+  // Not that much harder without.
+  def nthRecursive[A](n: Int, ls: List[A]): A = (n, ls) match {
+    case (0, h :: _   ) => h
+    case (n, _ :: tail) => nthRecursive(n - 1, tail)
+    case (_, Nil      ) => throw new NoSuchElementException
+  }
+}
 	
