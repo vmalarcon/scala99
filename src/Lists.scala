@@ -153,4 +153,36 @@ object P10 {
     }
 }
 
+object P11 {
+    def encodeModified(l: List[_]): List[_] = {
+        P10.encode(l).map { e => if (e._1 == 1) e._2 else e }
+    }
+    
+    // Just for fun, here's a more typesafe version.
+    def encodeModified2[A](ls: List[A]): List[Either[A, (Int, A)]] =
+        P10.encode(ls) map { t => if (t._1 == 1) Left(t._2) else Right(t) }
+}
+
+object P12 {
+    def decode[A](e: List[(Int, A)]): List[A] = e flatMap { el => List.fill(el._1)(el._2) }
+}
+
+object P13 {
+    def encodeDirect[A](l: List[A]): List[(Int, A)] = l match {
+        case Nil       => Nil
+        case h :: tail => (l.takeWhile(_ == h).length, h) :: encodeDirect(l.dropWhile(_ == h))
+    }
+}
+
+object P14 {
+    def duplicate[A](l: List[A]): List[A] = l flatMap { e => List(e, e) }
+}
+
+object P15 {
+    def duplicateN[A](n: Int, l: List[A]): List[A] = l flatMap { List.fill(n)(_) } 
+}
+
+object P16 {
+    def drop[A](n: Int, l: List[A]): List[A] = l.zipWithIndex.filterNot { f => (f._2 + 1) % n == 0 }.map(_._1)
+}
 
