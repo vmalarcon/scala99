@@ -318,3 +318,45 @@ object P18 {
 	def sliceFunctional[A](s: Int, e: Int, ls: List[A]): List[A] =
 		ls drop s take (e - (s max 0))
 }
+
+object P19 {
+	def rotate[A](n: Int, l: List[A]): List[A] = {
+		val (left, right) = l.splitAt(if (n < 0) l.length + n else n)
+		right ::: left
+	}		
+}
+
+object P20 {
+	// my version
+	def removeAt[A](n: Int, l: List[A]): (List[A], A) = {
+		val (left, right) = l.splitAt(n)
+		(left ::: right.tail, right.head)
+	}
+	
+	// The solution had a bug but it was interesting...
+	def removeAt2[A](n: Int, l: List[A]): (List[A], A) = {
+		if (n < 0) throw new NoSuchElementException
+		else (n, l) match {
+			case (_, Nil)       => throw new NoSuchElementException
+			case (0, h :: tail) => (tail, h)
+			case (i, h :: tail) => {
+				val (t, e) = removeAt2(i - 1, tail)
+				(h :: t, e)
+			}
+		}
+	}
+}
+
+object P21 {
+	// my solution
+	def insertAt[A](e: A, n: Int, l: List[A]): List[A] = (n, l) match {
+		case (_, Nil)       => Nil
+		case (1, h :: tail) => h :: e :: insertAt(e, n - 1, tail)
+		case (n, h :: tail) => h :: insertAt(e, n - 1, tail) 
+	}
+	
+	// more clever solution :-)
+	def insertAt[A](e: A, n: Int, ls: List[A]): List[A] = ls.splitAt(n) match {
+		case (pre, post) => pre ::: e :: post
+	}
+}
