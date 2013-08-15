@@ -257,64 +257,102 @@ object P18 {
 		ls drop s take (e - (s max 0))
 }
 
-object P17 {
-	def split[A](n: Int, l: List[A]): (List[A], List[A]) = l.splitAt(n)	
+object P19 {
+	def rotate[A](n: Int, l: List[A]): List[A] = {
+		val (left, right) = l.splitAt(if (n < 0) l.length + n else n)
+		right ::: left
+	}		
+}
+
+object P20 {
+	// my version
+	def removeAt[A](n: Int, l: List[A]): (List[A], A) = {
+		val (left, right) = l.splitAt(n)
+		(left ::: right.tail, right.head)
+	}
 	
-	// recursive solution
-	def split2[A](n: Int, l: List[A]): (List[A], List[A]) = (n, l) match {
-		case (_, Nil)  => (Nil, Nil)
-		case (0, list) => (Nil, list)
-		case (n, h :: tail) => {
-			val (pre, post) = split2(n - 1, tail)
-			(h :: pre, post)
+	// The solution had a bug but it was interesting...
+	def removeAt2[A](n: Int, l: List[A]): (List[A], A) = {
+		if (n < 0) throw new NoSuchElementException
+		else (n, l) match {
+			case (_, Nil)       => throw new NoSuchElementException
+			case (0, h :: tail) => (tail, h)
+			case (i, h :: tail) => {
+				val (t, e) = removeAt2(i - 1, tail)
+				(h :: t, e)
+			}
 		}
 	}
 }
 
-object P18 {
-	def slice[A](i: Int, k: Int, l: List[A]): List[A] = l.slice(i, k)
+object P21 {
+	// my solution
+	def insertAt[A](e: A, n: Int, l: List[A]): List[A] = (n, l) match {
+		case (_, Nil)       => Nil
+		case (1, h :: tail) => h :: e :: insertAt(e, n - 1, tail)
+		case (n, h :: tail) => h :: insertAt(e, n - 1, tail) 
+	}
 	
-	def slice2[A](i: Int, k: Int, l: List[A]): List[A] = (i, k, l) match {
-		case (_, _, Nil)       => Nil
-		case (0, 0, list)      => Nil
-		case (0, n, h :: tail) => h :: slice2(0, n - 1, tail)
-        case (n, m, h :: tail) => slice2(n - 1, m - 1, tail)
+	// more clever solution :-)
+	def insertAtS[A](e: A, n: Int, ls: List[A]): List[A] = ls.splitAt(n) match {
+		case (pre, post) => pre ::: e :: post
+	}
+}
+
+object P22 {
+	// my solution
+	def range(from: Int, to: Int): List[Int] = {
+		if (from > to) Nil
+		else from :: range(from + 1, to)
+	}
+	
+	// Builtin.
+	def rangeBuiltin(start: Int, end: Int): List[Int] = List.range(start, end + 1)
+
+	// Recursive.
+	def rangeRecursive(start: Int, end: Int): List[Int] =
+		if (end < start) Nil
+		else start :: rangeRecursive(start + 1, end)
+
+	// Tail recursive.
+	def rangeTailRecursive(start: Int, end: Int): List[Int] = {
+		def rangeR(end: Int, result: List[Int]): List[Int] = {
+			if (end < start) result
+			else rangeR(end - 1, end :: result)
+		}
+		rangeR(end, Nil)
 	}
 
-	// Simple recursive.
-	def sliceRecursive[A](start: Int, end: Int, ls: List[A]): List[A] =
-		(start, end, ls) match {
-		  case (_, _, Nil)                 => Nil
-		  case (_, e, _)         if e <= 0 => Nil
-		  case (s, e, h :: tail) if s <= 0 => h :: sliceRecursive(0, e - 1, tail)
-		  case (s, e, h :: tail)           => sliceRecursive(s - 1, e - 1, tail)
+	// The classic functional approach would be to use `unfoldr`, which Scala
+	// doesn't have.  So we'll write one and then use it.
+	def unfoldRight[A, B](s: B)(f: B => Option[(A, B)]): List[A] =
+		f(s) match {
+			case None         => Nil
+			case Some((r, n)) => r :: unfoldRight(n)(f)
 		}
+		
+	def rangeFunctional(start: Int, end: Int): List[Int] =
+		unfoldRight(start) { n =>
+			if (n > end) None
+			else Some((n, n + 1))
+		}	
+}
 
-	// Tail recursive, using pattern matching.
-	def sliceTailRecursive[A](start: Int, end: Int, ls: List[A]): List[A] = {
-		def sliceR(count: Int, curList: List[A], result: List[A]): List[A] =
-		  (count, curList) match {
-			case (_, Nil)                     => result.reverse
-			case (c, h :: tail) if end <= c   => result.reverse
-			case (c, h :: tail) if start <= c => sliceR(c + 1, tail, h :: result)
-			case (c, _ :: tail)               => sliceR(c + 1, tail, result)
-		  }
-		sliceR(0, ls, Nil)
-	  }
-
-	// Since several of the patterns are similar, we can condense the tail recursive
-	// solution a little.
-	def sliceTailRecursive2[A](start: Int, end: Int, ls: List[A]): List[A] = {
-		def sliceR(count: Int, curList: List[A], result: List[A]): List[A] = {
-		  if (curList.isEmpty || count >= end) result.reverse
-		  else sliceR(count + 1, curList.tail,
-					  if (count >= start) curList.head :: result
-					  else result)
+object P23 {
+	import scala.util.Random
+	
+	def randomSelect[A](n: Int, l: List[A]): List[A] = 
+		if   (n <= 0) Nil
+		else {
+			val (ls, e) = P20.removeAt(Random.nextInt(l.length), l)
+			e :: randomSelect(n - 1, ls)
 		}
-		sliceR(0, ls, Nil)
-	}
+}
 
-	// Functional.
-	def sliceFunctional[A](s: Int, e: Int, ls: List[A]): List[A] =
-		ls drop s take (e - (s max 0))
+object P24 {
+	def lotto(n: Int, max: Int) = P23.randomSelect(n, P22.range(1, max))
+}
+
+object P25 {
+	def randomPermute[A](l: List[A]): List[A] = P23.randomSelect(l.length, l)
 }
