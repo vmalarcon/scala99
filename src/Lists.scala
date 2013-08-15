@@ -184,5 +184,76 @@ object P15 {
 
 object P16 {
     def drop[A](n: Int, l: List[A]): List[A] = l.zipWithIndex.filterNot { f => (f._2 + 1) % n == 0 }.map(_._1)
+    
+	def dropRecursive[A](n: Int, l: List[A]): List[A] = {
+		def dropInternal(c: Int, li: List[A]): List[A] = (c, li) match {
+			case (1, h :: tail) => dropInternal(n, tail)
+			case (_, h :: tail) => h :: dropInternal(c - 1, tail)
+			case (_, Nil)       => Nil
+		}
+		dropInternal(n, l)
+	}
+}
+
+object P17 {
+	def split[A](n: Int, l: List[A]): (List[A], List[A]) = l.splitAt(n)	
+	
+	// recursive solution
+	def split2[A](n: Int, l: List[A]): (List[A], List[A]) = (n, l) match {
+		case (_, Nil)  => (Nil, Nil)
+		case (0, list) => (Nil, list)
+		case (n, h :: tail) => {
+			val (pre, post) = split2(n - 1, tail)
+			(h :: pre, post)
+		}
+	}
+}
+
+object P18 {
+	def slice[A](i: Int, k: Int, l: List[A]): List[A] = l.slice(i, k)
+	
+	def slice2[A](i: Int, k: Int, l: List[A]): List[A] = (i, k, l) match {
+		case (_, _, Nil)       => Nil
+		case (0, 0, list)      => Nil
+		case (0, n, h :: tail) => h :: slice2(0, n - 1, tail)
+        case (n, m, h :: tail) => slice2(n - 1, m - 1, tail)
+	}
+
+	// Simple recursive.
+	def sliceRecursive[A](start: Int, end: Int, ls: List[A]): List[A] =
+		(start, end, ls) match {
+		  case (_, _, Nil)                 => Nil
+		  case (_, e, _)         if e <= 0 => Nil
+		  case (s, e, h :: tail) if s <= 0 => h :: sliceRecursive(0, e - 1, tail)
+		  case (s, e, h :: tail)           => sliceRecursive(s - 1, e - 1, tail)
+		}
+
+	// Tail recursive, using pattern matching.
+	def sliceTailRecursive[A](start: Int, end: Int, ls: List[A]): List[A] = {
+		def sliceR(count: Int, curList: List[A], result: List[A]): List[A] =
+		  (count, curList) match {
+			case (_, Nil)                     => result.reverse
+			case (c, h :: tail) if end <= c   => result.reverse
+			case (c, h :: tail) if start <= c => sliceR(c + 1, tail, h :: result)
+			case (c, _ :: tail)               => sliceR(c + 1, tail, result)
+		  }
+		sliceR(0, ls, Nil)
+	  }
+
+	// Since several of the patterns are similar, we can condense the tail recursive
+	// solution a little.
+	def sliceTailRecursive2[A](start: Int, end: Int, ls: List[A]): List[A] = {
+		def sliceR(count: Int, curList: List[A], result: List[A]): List[A] = {
+		  if (curList.isEmpty || count >= end) result.reverse
+		  else sliceR(count + 1, curList.tail,
+					  if (count >= start) curList.head :: result
+					  else result)
+		}
+		sliceR(0, ls, Nil)
+	}
+
+	// Functional.
+	def sliceFunctional[A](s: Int, e: Int, ls: List[A]): List[A] =
+		ls drop s take (e - (s max 0))
 }
 
