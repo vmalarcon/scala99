@@ -1,0 +1,2 @@
+This is some merge textos
+Here, I'll add a line that will conflict
