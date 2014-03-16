@@ -1,2 +1,3 @@
-This is some merge textos
+This is some merge texts
 Here, I'll add a line that will conflict
+This is some more text that should not conflict
